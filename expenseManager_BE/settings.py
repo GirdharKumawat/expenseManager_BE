@@ -123,3 +123,9 @@ CORS_ALLOW_ALL_ORIGINS = True  # Allow all domains (for development)
 #     "http://localhost:3000",  # If using React locally
 # ]
 
+# Adding defult  renderer class
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
+}
