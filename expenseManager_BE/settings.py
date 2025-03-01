@@ -14,7 +14,6 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 
 DEBUG = True    
-
 #TODO : Change here
 ALLOWED_HOSTS = ['*']
 
@@ -137,7 +136,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes= 5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes= 60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
 
 }
@@ -153,3 +152,6 @@ CORS_ALLOW_HEADERS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = [
+    "http://3.110.168.144",
+]
