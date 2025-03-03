@@ -5,5 +5,5 @@ class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = ['id', 'amount', 'category', 'description', 'date']
-        read_only_fields = ['id', 'date']
+        read_only_fields = ['id']
         
