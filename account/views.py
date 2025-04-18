@@ -11,7 +11,7 @@ def userRegister(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
-        refresh = RefreshToken.for_user(user)
+        refresh = RefreshToken.for_user(user) 
         return Response({
             'user': serializer.data,
             'refresh': str(refresh),

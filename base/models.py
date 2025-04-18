@@ -14,12 +14,20 @@ class Expense(models.Model):
         ('Rent', 'Rent'),
         ('Other', 'Other'),
     ]
+    paymentType_CHOICES = [
+        ('Cash', 'Cash'),
+        ('Card', 'Card'),
+        ('Mobile', 'Mobile'),
+        ('Bank', 'Bank'),
+    ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='expenses')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.CharField(max_length=100, choices=CATEGORY_CHOICES)  # Use choices here
     description = models.TextField(blank=True, null=True)
     date = models.DateField(default=now)
+    paymentType = models.CharField(max_length=100, choices=paymentType_CHOICES)  # Use choices here
 
     def __str__(self):
         return f"{self.category} - {self.amount}"
+    
