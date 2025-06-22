@@ -13,7 +13,10 @@ def userRegister(request):
         user = serializer.save()
         refresh = RefreshToken.for_user(user) 
         return Response({
-            'user': serializer.data,
+            # 'user': serializer.data,
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
             'refresh': str(refresh),
             'access': str(refresh.access_token)
         }, status=status.HTTP_201_CREATED)
