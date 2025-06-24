@@ -5,7 +5,8 @@ from django.utils.timezone import now
 class Expense(models.Model):
     # Define category choices
     CATEGORY_CHOICES = [
-        ('Food', 'Food'),
+        ('Food', 'Food'), 
+
         ('Transport', 'Transport'),
         ('Entertainment', 'Entertainment'),
         ('Utilities', 'Utilities'),

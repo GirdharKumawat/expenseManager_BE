@@ -103,28 +103,7 @@ def getExpenses(request, pk=""):
     
     return Response({"data": data}, status=status.HTTP_200_OK)
 
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def getExpensesByCategory(request):
-    """
-    Retrieve expenses filtered by category using query parameters.
-    """
-    user = request.user
-    category = request.query_params.get('category', None)
-    
-    if not category:
-        return Response(
-            {"error": "Category parameter is required"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-        
-    expenses = user.expenses.filter(category=category)
-    serializer = ExpenseSerializer(expenses, many=True)
-    data = list(reversed(serializer.data))
-    
-    return Response({"data": data}, status=status.HTTP_200_OK)
-
+ 
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])

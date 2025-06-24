@@ -12,7 +12,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-DEBUG = True    
+DEBUG = os.getenv("DEBUG")    
 #TODO : Change here
 ALLOWED_HOSTS = ['*']
 
@@ -118,11 +118,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #TODO: Add CORS settings
 CORS_ALLOW_ALL_ORIGINS = True  # Allow all domains (for development)
 
-# If you want to allow only specific domains, use this:
-# CORS_ALLOWED_ORIGINS = [
-#     "https://your-frontend-domain.com",
-#     "http://localhost:3000",  # If using React locally
-# ]
 
 # Adding defult  renderer class
 REST_FRAMEWORK = {
@@ -135,7 +130,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes= 60),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
 
 }

@@ -5,6 +5,6 @@ urlpatterns = [
     # Admin interface
     path('admin/', admin.site.urls),
     
-    # Include all app URLs
+     
     path('', include('base.urls')),
 ]

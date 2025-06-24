@@ -15,6 +15,5 @@ urlpatterns = [
     path('api/add/expense/', views.addExpense),
     path('api/get/expenses/', views.getExpenses),
     path('api/get/expenses/<str:pk>/', views.getExpenses),
-    path('api/get/expenses/category/', views.getExpensesByCategory),
     path('api/delete/expense/<str:pk>/', views.deleteExpense),
 ]
