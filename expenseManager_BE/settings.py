@@ -12,7 +12,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-DEBUG = os.getenv("DEBUG")    
+DEBUG = os.getenv("DEBUG")    # f
 #TODO : Change here
 ALLOWED_HOSTS = ['*']
 
@@ -125,14 +125,15 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ),
      'DEFAULT_AUTHENTICATION_CLASSES': (  
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'account.authentication.JWTAuthentication',
     )
 }
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
-
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
 }
 
 CORS_ALLOW_HEADERS = [

@@ -1,12 +1,13 @@
 import os
 from django.shortcuts import render
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes , authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .models import Expense
 from .serializers import ExpenseSerializer
 from django.utils.timezone import now
+from account.authentication import CookieJWTAuthentication
 
 BASE_URL = os.getenv('BASE_URL', '')
 
@@ -32,6 +33,7 @@ def getRoutes(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication])
 def getProfile(request):
     """
     Retrieve the profile of the authenticated user.
@@ -46,6 +48,7 @@ def getProfile(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication])
 def addExpense(request):
     """
     Add a new expense for the authenticated user.
@@ -86,12 +89,10 @@ def addExpense(request):
 
 
 @api_view(['GET'])
+@authentication_classes([CookieJWTAuthentication])
 @permission_classes([IsAuthenticated])
 def getExpenses(request, pk=""):
-    """
-    Retrieve all expenses for the authenticated user.
-    Optional filtering by category using the pk parameter.
-    """
+
     user = request.user
     expenses = user.expenses.all()
     
@@ -107,6 +108,7 @@ def getExpenses(request, pk=""):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication])
 def deleteExpense(request, pk):
     """
     Delete an expense by its ID.
