@@ -125,7 +125,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ),
      'DEFAULT_AUTHENTICATION_CLASSES': (  
-        'account.authentication.JWTAuthentication',
+        'account.authentication.CookieJWTAuthentication',
     )
 }
 
