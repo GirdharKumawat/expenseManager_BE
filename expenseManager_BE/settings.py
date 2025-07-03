@@ -150,4 +150,5 @@ CORS_ALLOW_ALL_ORIGINS = True
 CSRF_TRUSTED_ORIGINS = [
     "https://www.expensemanager.girdharkumawat.site/",
     "https://expensemanager.girdharkumawat.site/",
+    "https://api.expensemanager.girdharkumawat.site"
 ]
