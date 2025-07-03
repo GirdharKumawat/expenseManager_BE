@@ -148,5 +148,6 @@ CORS_ALLOW_HEADERS = [
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
 CSRF_TRUSTED_ORIGINS = [
-    "http://13.235.67.20",
+    "https://www.expensemanager.girdharkumawat.site/",
+    "https://expensemanager.girdharkumawat.site/",
 ]
