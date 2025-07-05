@@ -51,19 +51,9 @@ def userLogin(request):
 @authentication_classes([CookieJWTAuthentication])
 @permission_classes([IsAuthenticated])
 def userLogout(request):
-        refresh_token = request.COOKIES.get("refresh_token")
-        if not refresh_token:
-            return Response({"error": "No refresh token provided."}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            token = RefreshToken(refresh_token)
-            token.blacklist()  # Blacklist the refresh token
-        except Exception as e:
-            return Response({"error": f"Failed to logout: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Clear the cookies
-        response = Response(status=status.HTTP_205_RESET_CONTENT)
-        response.delete_cookie('access_token', samesite="None", secure=True)
-        response.delete_cookie('refresh_token', samesite="None", secure=True)
+        response = Response({'msg':'Logout successfully'},status=status.HTTP_205_RESET_CONTENT)
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
         
         return response
     
