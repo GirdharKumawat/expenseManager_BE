@@ -9,6 +9,6 @@ urlpatterns = [
     path('user/login/', view=views.userLogin, name='user_login'),
     path('user/logout/', view=views.userLogout, name='user_logout'),
     path('token/refresh/', view=views.cookieTokenRefresh, name='token_refresh'),
-    
+    path('google/', view=views.google_login, name='google-login'),
     # User endpoints
 ]
