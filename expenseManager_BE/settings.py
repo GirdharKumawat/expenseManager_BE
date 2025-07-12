@@ -150,7 +150,9 @@ CORS_ALLOW_ALL_ORIGINS = True
 CSRF_TRUSTED_ORIGINS = [
     "https://www.expensemanager.girdharkumawat.site/",
     "https://expensemanager.girdharkumawat.site/",
-    "https://api.expensemanager.girdharkumawat.site"
+    "https://api.expensemanager.girdharkumawat.site",
+    "http://localhost:3000",  # Add for local development
+    "http://127.0.0.1:3000",  # Add for local development
 ]
 
 SESSION_COOKIE_SAMESITE = 'None'
