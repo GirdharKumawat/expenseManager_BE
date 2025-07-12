@@ -124,9 +124,10 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
     ),
-    #  'DEFAULT_AUTHENTICATION_CLASSES': (  
-    #     'account.authentication.CookieJWTAuthentication',
-    # )
+     'DEFAULT_AUTHENTICATION_CLASSES': (  
+        'account.authentication.CookieJWTAuthentication',
+    )
+    
 }
 
 SIMPLE_JWT = {
