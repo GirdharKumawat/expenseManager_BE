@@ -32,3 +32,48 @@ class Expense(models.Model):
     def __str__(self):
         return f"{self.category} - {self.amount}"
     
+class ExpenseGroup(models.Model):
+    name = models.CharField(max_length=50)
+    description =models.TextField(blank=True)
+    created_by = models.ForeignKey(User,on_delete=models.CASCADE,related_name='created_groups')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
+
+class GroupMember(models.Model):
+    group = models.ForeignKey(ExpenseGroup,on_delete=models.CASCADE,related_name='membership')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='group_memeberships')
+    
+    class Meta:
+        unique_together = ('group','user')
+    
+    def __str__(self):
+        return f"{self.user.username} in {self.group.name}"
+    
+class GroupExpense(models.Model):
+    group = models.ForeignKey(ExpenseGroup, on_delete=models.CASCADE, related_name='expenses')
+    title = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    paid_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='paid_expenses')
+    paid_on = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.title} - ₹{self.amount}"
+ 
+class GroupExpenseShare(models.Model):
+    expense = models.ForeignKey(GroupExpense, on_delete=models.CASCADE, related_name='shares')
+    participant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='expense_shares')
+    share_amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        unique_together = ('expense', 'participant')
+
+    def __str__(self):  
+        return f"{self.participant.username} owes ₹{self.share_amount}"
+
+
+
+
+    

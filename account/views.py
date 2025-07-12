@@ -11,7 +11,8 @@ from google.auth.transport import requests
 from .authentication import CookieJWTAuthentication
 
 
-COOKIE_SECURE=True
+COOKIE_SECURE=True  # Required when using SameSite=None
+SAME_SITE='None'  # For cross-origin requests
 @api_view(['GET'])
 @authentication_classes([CookieJWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -27,23 +28,26 @@ def userRegister(request):
         response = Response({
             'user': UserSerializer(user).data,
         })
-        response.set_cookie(key='access_token', value=str(refresh.access_token), httponly=True, secure=COOKIE_SECURE, samesite="None")
-        response.set_cookie(key='refresh_token', value=str(refresh), httponly=True, secure=COOKIE_SECURE, samesite="None")
+        response.set_cookie(key='access_token', value=str(refresh.access_token), httponly=True, secure=COOKIE_SECURE, samesite=SAME_SITE)
+        response.set_cookie(key='refresh_token', value=str(refresh), httponly=True, secure=COOKIE_SECURE, samesite=SAME_SITE)
         return response
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def userLogin(request):
     serializer = LoginSerializer(data=request.data)
+    print("Login attempt with data:", request.data)
+    print("---------------------------------------- ")
     if serializer.is_valid():
         user = serializer.validated_data['user']
         refresh = RefreshToken.for_user(user)
         response = Response({
             'user': UserSerializer(user).data,
         })
-        response.set_cookie(key='access_token', value=str(refresh.access_token), httponly=True, secure=COOKIE_SECURE, samesite="None")
-        response.set_cookie(key='refresh_token', value=str(refresh), httponly=True, secure=COOKIE_SECURE, samesite="None")
+        response.set_cookie(key='access_token', value=str(refresh.access_token), httponly=True, secure=COOKIE_SECURE, samesite=SAME_SITE)
+        response.set_cookie(key='refresh_token', value=str(refresh), httponly=True, secure=COOKIE_SECURE, samesite=SAME_SITE)
         return response
+    print("Serializer errors:", serializer.errors)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -58,7 +62,6 @@ def userLogout(request):
         return response
     
 @api_view(['POST'])
-@authentication_classes([CookieJWTAuthentication])
 def cookieTokenRefresh(request):  
     refresh_token = request.COOKIES.get("refresh_token")
     print(f"Refresh token from cookies: {refresh_token}")
@@ -71,7 +74,7 @@ def cookieTokenRefresh(request):
         response = Response({
             'Msg': 'Token refreshed successfully',
         })
-        response.set_cookie(key='access_token', value=access_token, httponly=True, secure=COOKIE_SECURE, samesite="None")
+        response.set_cookie(key='access_token', value=access_token, httponly=True, secure=COOKIE_SECURE, samesite=SAME_SITE)
         return response
     except Exception as e:
         return Response({"error": f"Failed to refresh token: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
@@ -116,14 +119,14 @@ def google_login(request):
             value=str(refresh.access_token),
             httponly=True,
             secure=COOKIE_SECURE,
-            samesite="None"
+            samesite=SAME_SITE
         )
         response.set_cookie(
             key='refresh_token',
             value=str(refresh),
             httponly=True,
             secure=COOKIE_SECURE,
-            samesite="None"
+            samesite=SAME_SITE
         )
         return response
 
