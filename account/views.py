@@ -58,9 +58,7 @@ def userLogin(request):
 @permission_classes([IsAuthenticated])
 def userLogout(request):
     response = Response({'msg':'Logout successfully'}, status=status.HTTP_205_RESET_CONTENT)
-    
-    # Delete cookies with the same attributes used when setting them
-    # For cross-site cookies, we need to set them to empty and expired
+     
     response.set_cookie(
         'access_token',
         value='',
