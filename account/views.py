@@ -57,11 +57,21 @@ def userLogin(request):
 @authentication_classes([CookieJWTAuthentication])
 @permission_classes([IsAuthenticated])
 def userLogout(request):
-        response = Response({'msg':'Logout successfully'},status=status.HTTP_205_RESET_CONTENT)
-        response.delete_cookie('access_token')
-        response.delete_cookie('refresh_token')
-        
-        return response
+    response = Response({'msg':'Logout successfully'}, status=status.HTTP_205_RESET_CONTENT)
+    
+    # Delete cookies with the same attributes used when setting them
+    response.delete_cookie(
+        'access_token',
+        samesite=SAME_SITE,
+        secure=COOKIE_SECURE
+    )
+    response.delete_cookie(
+        'refresh_token', 
+        samesite=SAME_SITE,
+        secure=COOKIE_SECURE
+    )
+    
+    return response
     
 @api_view(['POST'])
 def cookieTokenRefresh(request):  
