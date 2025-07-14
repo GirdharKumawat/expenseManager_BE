@@ -60,15 +60,22 @@ def userLogout(request):
     response = Response({'msg':'Logout successfully'}, status=status.HTTP_205_RESET_CONTENT)
     
     # Delete cookies with the same attributes used when setting them
-    response.delete_cookie(
+    # For cross-site cookies, we need to set them to empty and expired
+    response.set_cookie(
         'access_token',
-        samesite=SAME_SITE,
-        secure=COOKIE_SECURE
+        value='',
+        expires='Thu, 01 Jan 1970 00:00:00 GMT',
+        httponly=True,
+        secure=COOKIE_SECURE,
+        samesite=SAME_SITE
     )
-    response.delete_cookie(
-        'refresh_token', 
-        samesite=SAME_SITE,
-        secure=COOKIE_SECURE
+    response.set_cookie(
+        'refresh_token',
+        value='',
+        expires='Thu, 01 Jan 1970 00:00:00 GMT',
+        httponly=True,
+        secure=COOKIE_SECURE,
+        samesite=SAME_SITE
     )
     
     return response
