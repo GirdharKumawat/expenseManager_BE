@@ -290,7 +290,7 @@ def _get_group_members_with_sepding(group_id):
         total = get_total_spending_on_user(mem.user.id, group_id)
         member = {
             'id': mem.user.id,
-            'name': mem.user.username,
+            'name': mem.user.first_name + " " + mem.user.last_name,
             'total_spending': total
         }
         memberd_spending_list.append(member)
