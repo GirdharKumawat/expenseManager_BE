@@ -1,6 +1,9 @@
 from django.db import connection
 from django.contrib.auth.models import User
+from base.models import ExpenseGroup, GroupMember 
+from django.db import models
 from datetime import datetime
+from decimal import Decimal
 
 def build_group_summary(user):
     """
@@ -51,7 +54,6 @@ def build_group_summary(user):
             
             # Calculate user's balance in this group
             user_balance = _calculate_user_balance(cursor, group_id, user.id)
-            
             # Get expenses for this group
             expenses = _get_group_expenses(cursor, group_id)
             
@@ -68,6 +70,7 @@ def build_group_summary(user):
                 'expenses': expenses,
                 'membersList': members_list
             }
+            #now adding total_spending_on_users in group
             
             group_summaries.append(group_summary)
     
@@ -123,6 +126,7 @@ def get_group_detail(group_id,user_id):
         # Get expenses and members
         expenses = _get_group_expenses(cursor, group_id)
         members_list = _get_group_members_with_balances(cursor, group_id)
+        memebers_sepding = _get_group_members_with_sepding( group_id)
         
         group_detail = {
             'id': group_id,
@@ -132,7 +136,8 @@ def get_group_detail(group_id,user_id):
             'members': member_count,
             'createdBy': creator_name,
             'expenses': expenses,
-            'membersList': members_list
+            'membersList': members_list,
+            'membersSpending': memebers_sepding
         }
         
         return group_detail
@@ -223,6 +228,7 @@ def _get_group_expenses(cursor, group_id):
     
     return expenses
 
+
 def _get_group_members_with_balances(cursor, group_id):
     """
     Get all members of a group with their current balances
@@ -257,3 +263,32 @@ def _get_group_members_with_balances(cursor, group_id):
         members_list.append(member)
     
     return members_list
+
+
+def get_total_spending_on_user(user_id=None, group_id=None):
+    
+    user  = User.objects.get(id=user_id)  
+    group = ExpenseGroup.objects.get(id=group_id)
+    
+    res =  user.expense_shares.filter(expense__group=group).aggregate(
+        total_spending=models.Sum('share_amount')
+    )['total_spending']
+    
+    return res if res is not None else Decimal('0.00')
+  
+    
+    # Assuming there's a related name for expenses in the ExpenseGroup model
+   
+def _get_group_members_with_sepding(group_id):
+    memberd_spending_list = []
+    members= GroupMember.objects.filter(group_id=group_id)
+    for mem in members:
+        total = get_total_spending_on_user(mem.user.id, group_id)
+        member = {
+            'id': mem.user.id,
+            'name': mem.user.username,
+            'total_spending': total
+        }
+        memberd_spending_list.append(member)
+    return memberd_spending_list
+        
