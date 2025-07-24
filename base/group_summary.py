@@ -59,6 +59,8 @@ def build_group_summary(user):
             
             # Get members list with their balances
             members_list = _get_group_members_with_balances(cursor, group_id)
+            memebers_sepding = _get_group_members_with_sepding(group_id)
+            
             
             group_summary = {
                 'id': group_id,
@@ -68,8 +70,10 @@ def build_group_summary(user):
                 'members': member_count,
                 'createdBy': creator_name,
                 'expenses': expenses,
-                'membersList': members_list
+                'membersList': members_list,
+                'membersSpending': memebers_sepding 
             }
+            
             #now adding total_spending_on_users in group
             
             group_summaries.append(group_summary)
@@ -126,7 +130,7 @@ def get_group_detail(group_id,user_id):
         # Get expenses and members
         expenses = _get_group_expenses(cursor, group_id)
         members_list = _get_group_members_with_balances(cursor, group_id)
-        memebers_sepding = _get_group_members_with_sepding( group_id)
+        memebers_sepding = _get_group_members_with_sepding(group_id)
         
         group_detail = {
             'id': group_id,
@@ -137,9 +141,9 @@ def get_group_detail(group_id,user_id):
             'createdBy': creator_name,
             'expenses': expenses,
             'membersList': members_list,
-            'membersSpending': memebers_sepding
+            'membersSpending': memebers_sepding # why this
         }
-        
+
         return group_detail
 
 def _calculate_user_balance(cursor, group_id, user_id):
@@ -292,3 +296,5 @@ def _get_group_members_with_sepding(group_id):
         memberd_spending_list.append(member)
     return memberd_spending_list
         
+        
+        # user_id ,username = User.
