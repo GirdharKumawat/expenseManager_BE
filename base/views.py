@@ -98,10 +98,11 @@ def getExpenses(request, pk=""):
     
     if pk and pk.strip():
         expenses = expenses.filter(category=pk)
-        
-    serializer = ExpenseSerializer(expenses, many=True)
-    data = list(reversed(serializer.data))
     
+    expenses = expenses.order_by('-date')  # Sort by date descending (newest first)
+    serializer = ExpenseSerializer(expenses, many=True)
+    data = serializer.data
+
     return Response({"data": data}, status=status.HTTP_200_OK)
 
  
