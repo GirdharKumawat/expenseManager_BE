@@ -2,8 +2,8 @@ name: Keep Render Alive
 
 on:
   schedule:
-    # Runs every 5 minutes
     - cron: '*/5 * * * *'
+  workflow_dispatch: 
 
 jobs:
   ping:
@@ -11,4 +11,4 @@ jobs:
     steps:
       - name: Send GET request to health check
         run: |
-          curl -I https://expensemanager-be.onrender.com/api/auth/health/
+          curl -I https://your-app-name.onrender.com/api/health/
