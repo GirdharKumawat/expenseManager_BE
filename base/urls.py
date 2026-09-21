@@ -13,6 +13,10 @@ urlpatterns = [
     
     # Expense management routes
     path('api/add/expense/', views.addExpense),
+    path('api/add/expenses/bulk/', views.bulkAddExpenses),
+    path('api/transactions/sync', views.syncTransactions),
+    path('api/transactions/sync/', views.syncTransactions),
+    path('api/parse-statement/', views.parseStatement),
     path('api/get/expenses/', views.getExpenses),
     path('api/get/expenses/<str:pk>/', views.getExpenses),
     path('api/delete/expense/<str:pk>/', views.deleteExpense),

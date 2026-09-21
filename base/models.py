@@ -6,14 +6,22 @@ class Expense(models.Model):
     # Define category choices
     CATEGORY_CHOICES = [
         ('Food', 'Food'), 
-
         ('Transport', 'Transport'),
         ('Entertainment', 'Entertainment'),
         ('Utilities', 'Utilities'),
         ('Shopping', 'Shopping'),
         ('Health', 'Health'),
         ('Rent', 'Rent'),
+        ('Salary', 'Salary'),
+        ('Freelance', 'Freelance'),
+        ('Investment', 'Investment'),
+        ('Refund', 'Refund'),
+        ('Gift', 'Gift'),
         ('Other', 'Other'),
+    ]
+    TRANSACTION_TYPE_CHOICES = [
+        ('DEBIT', 'Debit'),
+        ('CREDIT', 'Credit'),
     ]
     paymentType_CHOICES = [
         ('Cash', 'Cash'),
@@ -28,9 +36,10 @@ class Expense(models.Model):
     description = models.TextField(blank=True, null=True)
     date = models.DateField(default=now)
     paymentType = models.CharField(max_length=100, choices=paymentType_CHOICES)  # Use choices here
+    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES, default='DEBIT')
 
     def __str__(self):
-        return f"{self.category} - {self.amount}"
+        return f"{self.transaction_type} - {self.category} - {self.amount}"
     
 class ExpenseGroup(models.Model):
     name = models.CharField(max_length=50)

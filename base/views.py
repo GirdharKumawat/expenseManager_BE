@@ -1,14 +1,23 @@
 import os
+from decimal import Decimal
+from django.db import transaction
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes , authentication_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from .models import Expense ,GroupExpense,GroupMember,ExpenseGroup,GroupExpenseShare
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from .models import Expense, GroupExpense, GroupMember, ExpenseGroup, GroupExpenseShare
 from django.contrib.auth.models import User
-from .serializers import ExpenseSerializer ,GroupExpenseSerializer,ExpenseGroupSerializer,GroupExpenseShareSerializer
+from .serializers import (
+    ExpenseSerializer,
+    GroupExpenseSerializer,
+    ExpenseGroupSerializer,
+    GroupExpenseShareSerializer,
+    TransactionSyncItemSerializer,
+)
 from django.utils.timezone import now
 from account.authentication import CookieJWTAuthentication
-from .group_summary import build_group_summary,get_group_detail
+from .group_summary import build_group_summary, get_group_detail
 BASE_URL = os.getenv('BASE_URL', '')
 
 
@@ -24,6 +33,8 @@ def getRoutes(request):
         'User Login': BASE_URL + 'api/auth/user/login',
         'User Profile': BASE_URL + 'api/profile',
         'Add Expense': BASE_URL + 'api/add/expense',
+        'Bulk Add Expenses': BASE_URL + 'api/add/expenses/bulk',
+        'Sync Transactions': BASE_URL + 'api/transactions/sync',
         'Get Expenses': BASE_URL + 'api/get/expenses/pk',
         'Get Expenses By Category': BASE_URL + 'api/get/expenses/category',
         'Delete Expense': BASE_URL + 'api/delete/expense/pk',
@@ -66,6 +77,7 @@ def addExpense(request):
     description = serializer.validated_data['description']
     date = serializer.validated_data.get('date', now().date())
     payment_type = serializer.validated_data['paymentType']
+    transaction_type = serializer.validated_data.get('transaction_type', 'DEBIT')
     
     expense = Expense(
         user=user,
@@ -73,7 +85,8 @@ def addExpense(request):
         category=category,
         description=description,
         date=date,
-        paymentType=payment_type
+        paymentType=payment_type,
+        transaction_type=transaction_type
     )
     expense.save()
     
@@ -86,9 +99,198 @@ def addExpense(request):
             "description": description,
             "date": expense.date,
             "paymentType": payment_type,
+            "transaction_type": transaction_type,
         }
     }
     return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication])
+def bulkAddExpenses(request):
+    """
+    Add multiple verified expenses/incomes in a single batch.
+    """
+    expenses_data = request.data.get('expenses', [])
+    if not isinstance(expenses_data, list) or not expenses_data:
+        return Response({'error': 'A non-empty list of expenses is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    created_expenses = []
+    from django.db import transaction
+    with transaction.atomic():
+        for item in expenses_data:
+            serializer = ExpenseSerializer(data=item)
+            if serializer.is_valid():
+                expense = serializer.save(user=request.user)
+                created_expenses.append(ExpenseSerializer(expense).data)
+            else:
+                return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                
+    return Response({'message': f'{len(created_expenses)} transactions saved successfully', 'data': created_expenses}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication, JWTAuthentication])
+def syncTransactions(request):
+    """
+    Bulk-sync offline transactions from mobile app client.
+    Validates data against strict schema standards, prevents duplicate records, and commits valid records.
+    """
+    raw_data = request.data
+    
+    if isinstance(raw_data, list):
+        transactions_data = raw_data
+    elif isinstance(raw_data, dict):
+        transactions_data = raw_data.get('transactions')
+        if transactions_data is None:
+            transactions_data = raw_data.get('expenses')
+        if transactions_data is None:
+            transactions_data = raw_data.get('data')
+    else:
+        transactions_data = None
+
+    if transactions_data is None or not isinstance(transactions_data, list):
+        return Response(
+            {'error': 'Invalid payload format. Expected a JSON array of transactions or an object containing a "transactions" or "expenses" array.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if len(transactions_data) == 0:
+        return Response(
+            {'error': 'No transactions provided for sync.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    user = request.user
+
+    # Query existing user expenses for duplicate detection
+    existing_expenses = Expense.objects.filter(user=user).values(
+        'amount', 'category', 'date', 'paymentType', 'transaction_type', 'description'
+    )
+    
+    existing_set = set()
+    for exp in existing_expenses:
+        desc_norm = (exp['description'] or "").strip()
+        date_str = str(exp['date'])
+        amount_val = str(Decimal(str(exp['amount'])).quantize(Decimal('0.01')))
+        sig = (amount_val, exp['category'], date_str, exp['paymentType'], exp['transaction_type'], desc_norm)
+        existing_set.add(sig)
+
+    seen_in_batch = set()
+    synced_items = []
+    duplicate_items = []
+    error_items = []
+
+    with transaction.atomic():
+        for idx, item in enumerate(transactions_data):
+            if not isinstance(item, dict):
+                error_items.append({
+                    'index': idx,
+                    'error': 'Item must be a JSON object.'
+                })
+                continue
+
+            client_id = item.get('client_id')
+            serializer = TransactionSyncItemSerializer(data=item)
+
+            if not serializer.is_valid():
+                error_entry = {
+                    'index': idx,
+                    'errors': serializer.errors
+                }
+                if client_id is not None:
+                    error_entry['client_id'] = client_id
+                error_items.append(error_entry)
+                continue
+
+            validated_data = serializer.validated_data
+            amount = validated_data['amount']
+            category = validated_data['category']
+            date_val = validated_data.get('date', now().date())
+            payment_type = validated_data['paymentType']
+            transaction_type = validated_data.get('transaction_type', 'DEBIT')
+            description = validated_data.get('description') or ""
+
+            amount_str = str(Decimal(str(amount)).quantize(Decimal('0.01')))
+            date_str = str(date_val)
+            desc_norm = description.strip()
+
+            sig = (amount_str, category, date_str, payment_type, transaction_type, desc_norm)
+
+            if sig in existing_set or sig in seen_in_batch:
+                dup_entry = {
+                    'amount': float(amount),
+                    'category': category,
+                    'date': date_str,
+                    'paymentType': payment_type,
+                    'transaction_type': transaction_type,
+                    'description': description,
+                    'reason': 'Duplicate transaction already exists'
+                }
+                if client_id is not None:
+                    dup_entry['client_id'] = client_id
+                duplicate_items.append(dup_entry)
+            else:
+                seen_in_batch.add(sig)
+                expense = Expense(
+                    user=user,
+                    amount=amount,
+                    category=category,
+                    description=description,
+                    date=date_val,
+                    paymentType=payment_type,
+                    transaction_type=transaction_type
+                )
+                expense.save()
+
+                synced_entry = TransactionSyncItemSerializer(expense).data
+                if client_id is not None:
+                    synced_entry['client_id'] = client_id
+                synced_items.append(synced_entry)
+
+    response_data = {
+        'message': 'Sync execution complete',
+        'summary': {
+            'total': len(transactions_data),
+            'synced_count': len(synced_items),
+            'duplicate_count': len(duplicate_items),
+            'failed_count': len(error_items)
+        },
+        'synced': synced_items,
+        'duplicates': duplicate_items,
+        'errors': error_items
+    }
+
+    status_code = status.HTTP_201_CREATED if len(synced_items) > 0 else status.HTTP_200_OK
+    return Response(response_data, status=status_code)
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication])
+def parseStatement(request):
+    """
+    Parse bank/UPI statement file (CSV, XLSX, XLS, PDF) and return extracted transactions.
+    """
+    if 'file' not in request.FILES:
+        return Response({'error': 'No statement file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    file_obj = request.FILES['file']
+    filename = file_obj.name
+    
+    try:
+        from .statement_parser import parse_statement_file
+        transactions = parse_statement_file(file_obj, filename)
+        return Response({
+            'filename': filename,
+            'count': len(transactions),
+            'data': transactions
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': f'Failed to parse statement: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])

@@ -15,6 +15,16 @@ from django.utils.decorators import method_decorator
 
 COOKIE_SECURE=True  # Required when using SameSite=None
 SAME_SITE='None'  # For cross-origin requests
+
+#health check endpoint
+@api_view(['GET'])
+def health_check(request):
+    return Response({"status": "OK"}, status=status.HTTP_200_OK)
+
+
+
+
+
 @api_view(['GET'])
 @authentication_classes([CookieJWTAuthentication])
 @permission_classes([IsAuthenticated])
