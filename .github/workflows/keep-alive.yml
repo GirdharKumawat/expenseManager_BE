@@ -1,0 +1,14 @@
+name: Keep Render Alive
+
+on:
+  schedule:
+    # Runs every 5 minutes
+    - cron: '*/5 * * * *'
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send GET request to health check
+        run: |
+          curl -I https://expensemanager-be.onrender.com/api/auth/health/
