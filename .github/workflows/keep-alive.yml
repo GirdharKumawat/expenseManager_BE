@@ -11,4 +11,4 @@ jobs:
     steps:
       - name: Send GET request to health check
         run: |
-          curl -I https://your-app-name.onrender.com/api/health/
+          curl -I https://expensemanager-be.onrender.com/api/auth/health/
